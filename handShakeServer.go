@@ -58,13 +58,13 @@ func GetUserSession(w http.ResponseWriter, r *http.Request) {
 		SessionKeys = append(SessionKeys, k)
 	}
 
-	var x = struct {
-		Sessions []int
-	}{SessionKeys}
+	//var x = struct {
+	//	Sessions []int
+	//}{SessionKeys}
 
 	//fmt.Fprintf(w, "Connected successfully--\n user_name: %s\n user_id: %d\n user_session: %d", usrName, UsersNameId[usrName], UsersIdSession[UsersNameId[usrName]])
 
-	jsonFormatted, err := json.Marshal(x)
+	jsonFormatted, err := json.Marshal(SessionKeys)
 	if err != nil {
 		fmt.Println("error:", err)
 	}
