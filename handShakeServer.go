@@ -13,6 +13,7 @@ import (
 
 var UsersNameId map[string]int   // Mapping from UserName to Id
 var UsersIdSession map[int]int   // Mapping from Id to Session
+var UsersIdReg map[int]int       // Mapping from Id to Rec_ID
 var Sessions map[int]SessionData // Current running Sessions
 
 var CurrentNumOfId int      // to assign new id for new users
@@ -27,6 +28,9 @@ type Node struct {
 	Data      string
 	Id        int
 	Neighbors []int
+	Known     bool
+	X         int
+	Y         int
 }
 
 func (n Node) String() string {
@@ -38,6 +42,7 @@ func main() {
 	UsersIdSession = make(map[int]int)
 	UsersNameId = make(map[string]int)
 	Sessions = make(map[int]SessionData)
+	UsersIdReg = make(map[int]int)
 
 	CurrentNumOfSession = 2
 	file, err := os.Open("data")
@@ -51,6 +56,7 @@ func main() {
 
 	http.HandleFunc("/SessionServer", LoginAndGetSession)
 	http.HandleFunc("/GameServer", ConnectToSession)
+	http.HandleFunc("/UpdateState", UpdateGameState)
 	http.ListenAndServe(":33333", nil)
 
 }
@@ -58,6 +64,7 @@ func main() {
 // GetUserSession expect parameter "user" and "session"
 func LoginAndGetSession(w http.ResponseWriter, r *http.Request) {
 	usrName := r.FormValue("user")
+	regID, _ := strconv.Atoi(r.FormValue("regid"))
 
 	if !UserExist(usrName) {
 		// User does not exist, Assign new id
@@ -65,6 +72,7 @@ func LoginAndGetSession(w http.ResponseWriter, r *http.Request) {
 		CurrentNumOfId++
 	}
 
+	UsersIdReg[UsersNameId[usrName]] = regID
 	SessionKeys := []int{}
 	for k := range Sessions {
 		SessionKeys = append(SessionKeys, k)
@@ -122,6 +130,7 @@ func ConnectToSession(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%s", jsonFormattedData)
 }
 
+//regID, _ := strconv.Atoi(r.FormValue("regid"))
 func ParseData(f *os.File) SessionData {
 	// HERE IS WHERE WE PUT INITIAL GRAPH STATE INTO SESSION
 	graphData := make([]Node, 0, 50)
@@ -130,13 +139,26 @@ func ParseData(f *os.File) SessionData {
 	scanner := bufio.NewScanner(f)
 	set := make(map[string]Node)
 	for scanner.Scan() {
-		nodeName := scanner.Text()
+		strsToks := strings.Split(scanner.Text(), ",")
+		nodeName := strsToks[0]
+		v, _ := strconv.Atoi(strsToks[1])
+		visible := false
+		if v == 1 {
+			visible = true
+		}
+		x, _ := strconv.Atoi(strsToks[2])
+		y, _ := strconv.Atoi(strsToks[3])
+		fmt.Println(x)
 		node, exists := set[nodeName]
 		if !exists {
-			node = Node{Data: nodeName, Id: newId}
+			node = Node{Data: nodeName, Id: newId, Known: visible, X: x, Y: y}
 			graphMapping[strconv.Itoa(newId)] = nodeName
 			set[nodeName] = node
 			newId++
+		} else {
+			node.X = x
+			node.Y = y
+			node.Known = visible
 		}
 		scanner.Scan()
 		strs := strings.Split(scanner.Text(), ",")
@@ -156,4 +178,25 @@ func ParseData(f *os.File) SessionData {
 	}
 
 	return SessionData{graphData, graphMapping}
+}
+
+// TAKES NAME/GAMEDATA
+func UpdateGameState(w http.ResponseWriter, r *http.Request) {
+	//usrName := r.FormValue("name")
+	//dataStr := r.FormValue("data")
+	//usrId := UsersNameId[usrName]
+	//usrSess := UsersIdSession[usrId]
+	//usrSession, err := strconv.Atoi(r.FormValue("session"))
+	//if err != nil {
+	//	log.Println(err)
+	//}
+
+	//SessionUsers := []int{}
+	//for k, v := range UsersIdSession {
+	//if v == usrSess {
+	//	SessionUsers = append(SessionKeys, k)
+	// Write To GSM
+	//}
+	//}
+
 }
