@@ -1,20 +1,23 @@
 graph {
-      JiaLe -- Mike
-      Roee -- Zack
-      Molly -- Zack
-      Chris -- Melissa
-      Melissa -- Nathan
-      Sam -- Roee
-      Colin -- Zorah
-      Ally -- Kyle
-      JiaLe -- Sam
-      Roee -- JiaLe
-      Kristie -- Clint
-      Clint -- Melissa
-      Melissa -- Kristie
-	  Colin -- Nathan
-	  Molly -- Mike
-	  Sam -- Kyle
-	  Roee -- Mike
-	  Mike -- Sam
+    JiaLe[style=filled]
+    Roee[style=filled]
+    Molly[style=filled]
+    JiaLe -- Mike
+    Roee -- Zack
+    Molly -- Zack
+    Chris -- Melissa
+    Melissa -- Nathan
+    Sam -- Roee
+    Colin -- Zorah
+    Ally -- Kyle
+    JiaLe -- Sam
+    Roee -- JiaLe
+    Kristie -- Clint
+    Clint -- Melissa
+    Melissa -- Kristie
+	Colin -- Nathan
+	Molly -- Mike
+	Sam -- Kyle
+	Roee -- Mike
+	Mike -- Sam
 }
