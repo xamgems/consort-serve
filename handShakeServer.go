@@ -140,7 +140,7 @@ func ParseData(f *os.File) SessionData {
 		}
 		scanner.Scan()
 		strs := strings.Split(scanner.Text(), ",")
-		neighbors := make([]int, 8)
+		neighbors := make([]int, 0, 8)
 		for _, edgeName := range strs {
 			edge, exists := set[edgeName]
 			if !exists {
