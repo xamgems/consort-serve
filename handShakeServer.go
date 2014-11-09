@@ -2,9 +2,9 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/alexjlockwood/gcm"
 	"log"
 	"net/http"
 	"os"
@@ -41,8 +41,8 @@ type Node struct {
 }
 
 type GCMData struct {
-	data             string
-	registration_ids []string
+	Data             string
+	Registration_ids []string
 }
 
 func (n Node) String() string {
@@ -202,7 +202,7 @@ func UpdateGameState(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(usrName)
 	fmt.Println(dataName)
 	fmt.Println(UsersIdSession)
-	UsersReg := []string{}
+	UsersReg := []string{"dasdaw21312ug3812bduhbob", "23g1y2udbhjsabdu2y3rbjk@!#^*!@$"}
 	for k, v := range UsersIdSession {
 		fmt.Printf("v is %d, usrSess is %d\n", v, usrSess)
 		if v == usrSess {
@@ -211,22 +211,33 @@ func UpdateGameState(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	fmt.Printf("%v\n", UsersReg)
-	dataBodyGCM := GCMData{dataName, UsersReg}
-	jsonGCMData, _ := json.Marshal(dataBodyGCM)
-	fmt.Println(jsonGCMData)
+	//dataBodyGCM := &GCMData{dataName, UsersReg}
+	//jsonGCMData, err := json.Marshal(dataBodyGCM)
+	//fmt.Println(jsonGCMData)
+
+	//if err != nil {
+	//fmt.Println("error:", err)
+	//}
+
+	data := map[string]interface{}{"name": dataName}
+	msg := gcm.NewMessage(data, UsersReg...)
+	sender := &gcm.Sender{ApiKey: "AIzaSyCt7nNLPglsOiBoxCM5aSXbJw-93WkpMP4"}
+	_, err := sender.Send(msg, 2)
+	if err != nil {
+		fmt.Println("Failed", err)
+		return
+	}
 
 	// Send it out
-	gcm := &http.Client{}
-	req, _ := http.NewRequest("POST", "https://android.googleapis.com/gcm/send", bytes.NewBuffer(jsonGCMData))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "key=AIzaSyCt7nNLPglsOiBoxCM5aSXbJw-93WkpMP4")
+	//gcm := &http.Client{}
+	//req, _ := http.NewRequest("POST", "https://android.googleapis.com/gcm/send", bytes.NewBuffer(jsonGCMData))
+	//req.Header.Set("Content-Type", "application/json")
+	//req.Header.Set("Authorization", "key=AIzaSyCt7nNLPglsOiBoxCM5aSXbJw-93WkpMP4")
 
-	resp, err := gcm.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
+	//resp, err := gcm.Do(req)
+	//if err != nil {
+	//panic(err)
+	//}
+	//defer resp.Body.Close()
 
-	fmt.Println("response Status:", resp.Status)
-	fmt.Println("response Headers:", resp.Header)
 }
