@@ -103,7 +103,8 @@ func LoginAndGetSession(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println("error:", err)
 	}
-	fmt.Printf("new user connectin with reg of %s" + regID)
+	fmt.Printf("new user: %s connected", usrName)
+	fmt.Printf("new user connectin with reg of %s\n" + regID)
 	fmt.Printf("%s\n", jsonFormatted)
 	fmt.Fprintf(w, "%s\n", jsonFormatted)
 }
