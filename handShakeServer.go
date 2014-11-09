@@ -20,8 +20,12 @@ var CurrentNumOfId int      // to assign new id for new users
 var CurrentNumOfSession int // to assign new session
 
 type SessionData struct {
-	Graph    []Node
+	Graph    Graph
 	Mappings map[string]string
+}
+
+type Graph struct {
+	Nodes []Node
 }
 
 type Node struct {
@@ -162,7 +166,7 @@ func ParseData(f *os.File) SessionData {
 		}
 		scanner.Scan()
 		strs := strings.Split(scanner.Text(), ",")
-		neighbors := make([]int, 0, 8)
+		neighbors := make([]int, 0)
 		for _, edgeName := range strs {
 			edge, exists := set[edgeName]
 			if !exists {
@@ -177,7 +181,7 @@ func ParseData(f *os.File) SessionData {
 		graphData = append(graphData, node)
 	}
 
-	return SessionData{graphData, graphMapping}
+	return SessionData{Graph{graphData}, graphMapping}
 }
 
 // TAKES NAME/GAMEDATA
