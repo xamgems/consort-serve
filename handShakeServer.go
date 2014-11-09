@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"strconv"
+	//	"strconv"
 )
 
 var UsersNameId map[string]int // Mapping from UserName to Id
@@ -26,7 +26,6 @@ func main() {
 // GetUserSession expect parameter "user" and "session"
 func GetUserSession(w http.ResponseWriter, r *http.Request) {
 	usrName := r.FormValue("user")
-	usrSession, _ := strconv.Atoi(r.FormValue("session"))
 
 	if !UserExist(usrName) {
 		// User does not exist, Assign new id
@@ -35,17 +34,12 @@ func GetUserSession(w http.ResponseWriter, r *http.Request) {
 	}
 	usrID := UsersNameId[usrName]
 
-	if usrSession == 0 {
-		usrSession = (usrID << 3 * 31) >> 2
-	} else if !Sessions[usrSession] {
-		fmt.Fprintln(w, "Passed in session does not exist")
-		return
-	}
+	usrSession := (usrID << 3 * 31) >> 2
 
 	UsersIdSession[usrID] = usrSession
 	Sessions[usrSession] = true
 
-	SessionKeys = []int{}
+	SessionKeys := []int{}
 	for k := range Sessions {
 		SessionKeys = append(SessionKeys, k)
 	}
@@ -61,8 +55,6 @@ func UserExist(usrName string) bool {
 }
 
 func connectToSession(w http.ResponseWriter, r *http.Request) {
-	usrID, _ := strconv.Atoi(r.FormValue("id"))
-	usrSession, _ := strconv.Atoi(r.FormValue("session"))
-	//
-
+	//usrID, _ := strconv.Atoi(r.FormValue("id"))
+	//usrSession, _ := strconv.Atoi(r.FormValue("session"))
 }
