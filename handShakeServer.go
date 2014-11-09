@@ -170,8 +170,10 @@ func ParseData(f *os.File) SessionData {
 		} else {
 			start := strsToks[1]
 			end := strsToks[2]
-			node := set[start]
-			node.Neighbors = append(node.Neighbors, set[end].Id)
+			startNode := set[start]
+			endNode := set[end]
+			startNode.Neighbors = append(startNode.Neighbors, endNode.Id)
+			endNode.Neighbors = append(endNode.Neighbors, startNode.Id)
 		}
 	}
 
