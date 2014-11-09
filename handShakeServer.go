@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/alexjlockwood/gcm"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/alexjlockwood/gcm"
 )
 
 var UsersNameId map[string]int   // Mapping from UserName to Id
@@ -168,7 +169,8 @@ func ParseData(f *os.File) SessionData {
 			if strsToks[7] == "filled" {
 				visible = true
 			}
-			node := &(Node{Data: nodeName, Id: newId, Known: visible, X: x, Y: y})
+			node := &(Node{Data: strings.ToLower(nodeName),
+				Id: newId, Known: visible, X: x, Y: y})
 			graphMapping[strconv.Itoa(newId)] = nodeName
 			set[nodeName] = node
 			newId++
