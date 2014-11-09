@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -13,7 +14,7 @@ import (
 
 var UsersNameId map[string]int   // Mapping from UserName to Id
 var UsersIdSession map[int]int   // Mapping from Id to Session
-var UsersIdReg map[int]int       // Mapping from Id to Rec_ID
+var UsersIdReg map[int]string    // Mapping from Id to Rec_ID
 var Sessions map[int]SessionData // Current running Sessions
 
 var CurrentNumOfId int      // to assign new id for new users
@@ -37,16 +38,26 @@ type Node struct {
 	Y         int
 }
 
+type GCMData struct {
+	data             string
+	registration_ids []string
+}
+
 func (n Node) String() string {
 	return "{Id:" + fmt.Sprint(n.Id) + " Data: " + n.Data +
 		" Neighbors: " + fmt.Sprint(n.Neighbors) + "}"
+}
+
+func UserExist(usrName string) bool {
+	_, ok := UsersNameId[usrName]
+	return ok
 }
 
 func main() {
 	UsersIdSession = make(map[int]int)
 	UsersNameId = make(map[string]int)
 	Sessions = make(map[int]SessionData)
-	UsersIdReg = make(map[int]int)
+	UsersIdReg = make(map[int]string)
 
 	CurrentNumOfSession = 2
 	file, err := os.Open("data")
@@ -68,7 +79,7 @@ func main() {
 // GetUserSession expect parameter "user" and "session"
 func LoginAndGetSession(w http.ResponseWriter, r *http.Request) {
 	usrName := r.FormValue("user")
-	regID, _ := strconv.Atoi(r.FormValue("regid"))
+	regID := r.FormValue("regid")
 
 	if !UserExist(usrName) {
 		// User does not exist, Assign new id
@@ -96,16 +107,11 @@ func LoginAndGetSession(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%s\n", jsonFormatted)
 }
 
-func UserExist(usrName string) bool {
-	_, ok := UsersNameId[usrName]
-	return ok
-}
-
 //var UsersNameId map[string]int // Mapping from UserName to Id
 //var UsersIdSession map[int]int // Mapping from Id to Session
 //var Sessions map[int][]Node    // Current running Sessions
 func ConnectToSession(w http.ResponseWriter, r *http.Request) {
-	usrName := r.FormValue("name")
+	usrName := r.FormValue("user")
 	usrSession, err := strconv.Atoi(r.FormValue("session"))
 	if err != nil {
 		log.Println(err)
@@ -185,22 +191,41 @@ func ParseData(f *os.File) SessionData {
 }
 
 // TAKES NAME/GAMEDATA
+//type GCMData struct {
+//data             map[string]string
+//registration_ids []int
+//}
 func UpdateGameState(w http.ResponseWriter, r *http.Request) {
-	//usrName := r.FormValue("name")
-	//dataStr := r.FormValue("data")
-	//usrId := UsersNameId[usrName]
-	//usrSess := UsersIdSession[usrId]
-	//usrSession, err := strconv.Atoi(r.FormValue("session"))
-	//if err != nil {
-	//	log.Println(err)
-	//}
+	usrName := r.FormValue("user")
+	dataName := r.FormValue("data")
+	usrId := UsersNameId[usrName]
+	usrSess := UsersIdSession[usrId]
+	fmt.Println(usrName)
+	fmt.Println(dataName)
 
-	//SessionUsers := []int{}
-	//for k, v := range UsersIdSession {
-	//if v == usrSess {
-	//	SessionUsers = append(SessionKeys, k)
-	// Write To GSM
-	//}
-	//}
+	UsersReg := []string{}
+	for k, v := range UsersIdSession {
+		if v == usrSess {
+			UsersReg = append(UsersReg, UsersIdReg[k])
+		}
+	}
+	fmt.Printf("%v\n", UsersReg)
+	dataBodyGCM := GCMData{dataName, UsersReg}
+	jsonGCMData, _ := json.Marshal(dataBodyGCM)
+	fmt.Println(jsonGCMData)
 
+	// Send it out
+	gcm := &http.Client{}
+	req, _ := http.NewRequest("POST", "https://android.googleapis.com/gcm/send", bytes.NewBuffer(jsonGCMData))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "key=AIzaSyCt7nNLPglsOiBoxCM5aSXbJw-93WkpMP4")
+
+	resp, err := gcm.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	fmt.Println("response Status:", resp.Status)
+	fmt.Println("response Headers:", resp.Header)
 }
