@@ -25,7 +25,7 @@ type SessionData struct {
 	Graph    Graph
 	Width    float64
 	Height   float64
-	Mappings map[string]string
+	Mappings map[string]string // Id to node name
 }
 
 type Graph struct {
@@ -171,7 +171,7 @@ func ParseData(f *os.File) SessionData {
 			}
 			node := &(Node{Data: strings.ToLower(nodeName),
 				Id: newId, Known: visible, X: x, Y: y})
-			graphMapping[strconv.Itoa(newId)] = nodeName
+			graphMapping[strconv.Itoa(newId)] = strings.ToLower(nodeName)
 			set[nodeName] = node
 			newId++
 			graphData = append(graphData, node)
