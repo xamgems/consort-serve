@@ -1,0 +1,35 @@
+graph 1 5.4444 5.3611
+node JiaLe 4.4898 3.4807 0.83048 0.5 JiaLe solid ellipse black lightgrey
+node Mike 4.5646 4.1874 0.83048 0.5 Mike solid ellipse black lightgrey
+node Roee 3.537 4.3949 0.79437 0.5 Roee solid ellipse black lightgrey
+node Zack 4.0017 5.1088 0.79437 0.5 Zack solid ellipse black lightgrey
+node Molly 4.9911 4.8192 0.9027 0.5 Molly solid ellipse black lightgrey
+node Chris 0.4162 0.47985 0.83048 0.5 Chris solid ellipse black lightgrey
+node Melissa 1.811 0.8931 1.0652 0.5 Melissa solid ellipse black lightgrey
+node Nathan 3.0676 0.947 1.011 0.5 Nathan solid ellipse black lightgrey
+node Sam 3.4937 3.4396 0.75 0.5 Sam solid ellipse black lightgrey
+node Colin 3.4231 1.6613 0.84854 0.5 Colin solid ellipse black lightgrey
+node Zorah 2.5277 2.8015 0.88464 0.5 Zorah solid ellipse black lightgrey
+node Ally 4.6499 2.327 0.75 0.5 Ally solid ellipse black lightgrey
+node Kyle 3.5855 2.7775 0.77632 0.5 Kyle solid ellipse black lightgrey
+node Kristie 1.251 1.5553 0.95686 0.5 Kristie solid ellipse black lightgrey
+node Clint 1.8464 0.24491 0.79437 0.5 Clint solid ellipse black lightgrey
+edge JiaLe Mike 4 4.5164 3.7319 4.5234 3.7985 4.5311 3.8705 4.5381 3.9371 solid black
+edge JiaLe Sam 4 4.0731 3.4635 4.007 3.4608 3.939 3.458 3.8738 3.4553 solid black
+edge Mike Sam 4 4.2888 3.9949 4.124 3.8797 3.9158 3.7344 3.7538 3.6212 solid black
+edge Roee JiaLe 4 3.758 4.1829 3.9097 4.0373 4.1105 3.8446 4.2634 3.698 solid black
+edge Roee Mike 4 3.9196 4.3176 3.9995 4.3015 4.084 4.2845 4.1645 4.2682 solid black
+edge Roee Zack 4 3.6892 4.6287 3.741 4.7084 3.799 4.7974 3.8508 4.877 solid black
+edge Molly Mike 4 4.8323 4.584 4.7963 4.5307 4.7581 4.474 4.7221 4.4208 solid black
+edge Molly Zack 4 4.5887 4.937 4.5138 4.9589 4.436 4.9817 4.3624 5.0032 solid black
+edge Chris Melissa 4 0.78997 0.5906 0.96427 0.64224 1.1732 0.70415 1.3566 0.75847 solid black
+edge Melissa Nathan 4 2.3439 0.91596 2.4162 0.91906 2.4901 0.92223 2.5619 0.92531 solid black
+edge Melissa Kristie 4 1.612 1.1284 1.5579 1.1924 1.4994 1.2615 1.4456 1.3252 solid black
+edge Sam Roee 4 3.5051 3.6906 3.5114 3.8299 3.5192 4.0027 3.5256 4.1423 solid black
+edge Sam Kyle 4 3.5284 3.1893 3.5357 3.1366 3.5434 3.0809 3.5507 3.0282 solid black
+edge Colin Nathan 4 3.3027 1.4195 3.2665 1.3466 3.2267 1.2666 3.1903 1.1934 solid black
+edge Colin Zorah 4 3.2419 1.892 3.0866 2.0899 2.8639 2.3734 2.7087 2.5711 solid black
+edge Ally Kyle 4 4.3306 2.4622 4.1983 2.5181 4.045 2.583 3.912 2.6393 solid black
+edge Kristie Clint 4 1.363 1.3088 1.4701 1.0731 1.6307 0.71975 1.7369 0.48585 solid black
+edge Clint Melissa 4 1.8326 0.49737 1.83 0.54429 1.8273 0.59333 1.8248 0.64026 solid black
+stop

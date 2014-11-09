@@ -21,11 +21,13 @@ var CurrentNumOfSession int // to assign new session
 
 type SessionData struct {
 	Graph    Graph
+	Width    float64
+	Height   float64
 	Mappings map[string]string
 }
 
 type Graph struct {
-	Nodes []Node
+	Nodes []*Node
 }
 
 type Node struct {
@@ -33,8 +35,8 @@ type Node struct {
 	Id        int
 	Neighbors []int
 	Known     bool
-	X         int
-	Y         int
+	X         float64
+	Y         float64
 }
 
 func (n Node) String() string {
@@ -49,7 +51,7 @@ func main() {
 	UsersIdReg = make(map[int]int)
 
 	CurrentNumOfSession = 2
-	file, err := os.Open("data")
+	file, err := os.Open("friends.txt")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -137,51 +139,43 @@ func ConnectToSession(w http.ResponseWriter, r *http.Request) {
 //regID, _ := strconv.Atoi(r.FormValue("regid"))
 func ParseData(f *os.File) SessionData {
 	// HERE IS WHERE WE PUT INITIAL GRAPH STATE INTO SESSION
-	graphData := make([]Node, 0, 50)
+	graphData := make([]*Node, 0, 50)
 	graphMapping := make(map[string]string)
 	newId := 1
 	scanner := bufio.NewScanner(f)
-	set := make(map[string]Node)
+	set := make(map[string]*Node)
+	scanner.Scan()
+	graphInfo := strings.Split(scanner.Text(), " ")
+	graphWidth, _ := strconv.ParseFloat(graphInfo[2], 64)
+	graphHeight, _ := strconv.ParseFloat(graphInfo[3], 64)
 	for scanner.Scan() {
-		strsToks := strings.Split(scanner.Text(), ",")
-		nodeName := strsToks[0]
-		v, _ := strconv.Atoi(strsToks[1])
-		visible := false
-		if v == 1 {
-			visible = true
+		strsToks := strings.Split(scanner.Text(), " ")
+		lineType := strsToks[0]
+		if lineType == "stop" {
+			break
 		}
-		x, _ := strconv.Atoi(strsToks[2])
-		y, _ := strconv.Atoi(strsToks[3])
-		fmt.Println(x)
-		node, exists := set[nodeName]
-		if !exists {
-			node = Node{Data: nodeName, Id: newId, Known: visible, X: x, Y: y}
+		if lineType == "node" {
+			visible := false
+			if newId == 1 {
+				visible = true
+			}
+			nodeName := strsToks[1]
+			x, _ := strconv.ParseFloat(strsToks[2], 64)
+			y, _ := strconv.ParseFloat(strsToks[3], 64)
+			node := &(Node{Data: nodeName, Id: newId, Known: visible, X: x, Y: y})
 			graphMapping[strconv.Itoa(newId)] = nodeName
 			set[nodeName] = node
 			newId++
+			graphData = append(graphData, node)
 		} else {
-			node.X = x
-			node.Y = y
-			node.Known = visible
+			start := strsToks[1]
+			end := strsToks[2]
+			node := set[start]
+			node.Neighbors = append(node.Neighbors, set[end].Id)
 		}
-		scanner.Scan()
-		strs := strings.Split(scanner.Text(), ",")
-		neighbors := make([]int, 0)
-		for _, edgeName := range strs {
-			edge, exists := set[edgeName]
-			if !exists {
-				edge = (Node{Data: edgeName, Id: newId})
-				graphMapping[strconv.Itoa(newId)] = edgeName
-				set[edgeName] = edge
-				newId++
-			}
-			neighbors = append(neighbors, edge.Id)
-		}
-		node.Neighbors = neighbors
-		graphData = append(graphData, node)
 	}
 
-	return SessionData{Graph{graphData}, graphMapping}
+	return SessionData{Graph{graphData}, graphWidth, graphHeight, graphMapping}
 }
 
 // TAKES NAME/GAMEDATA
