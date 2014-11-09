@@ -44,7 +44,7 @@ func GetUserSession(w http.ResponseWriter, r *http.Request) {
 		SessionKeys = append(SessionKeys, k)
 	}
 	//fmt.Fprintf(w, "Connected successfully--\n user_name: %s\n user_id: %d\n user_session: %d", usrName, UsersNameId[usrName], UsersIdSession[UsersNameId[usrName]])
-	fmt.Fprint(w, "%v", SessionKeys)
+	fmt.Fprintf(w, "%v", SessionKeys)
 }
 
 func UserExist(usrName string) bool {
