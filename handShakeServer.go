@@ -1,18 +1,27 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
 )
 
-var UsersNameId map[string]int // Mapping from UserName to Id
-var UsersIdSession map[int]int // Mapping from Id to Session
-var Sessions map[int][]Node    // Current running Sessions
+var UsersNameId map[string]int   // Mapping from UserName to Id
+var UsersIdSession map[int]int   // Mapping from Id to Session
+var Sessions map[int]SessionData // Current running Sessions
 
 var CurrentNumOfId int      // to assign new id for new users
 var CurrentNumOfSession int // to assign new session
+
+type SessionData struct {
+	Graph    []Node
+	Mappings map[string]string
+}
 
 type Node struct {
 	Data      string
@@ -20,15 +29,24 @@ type Node struct {
 	Neighbors []int
 }
 
+func (n Node) String() string {
+	return "{Id:" + fmt.Sprint(n.Id) + " Data: " + n.Data +
+		" Neighbors: " + fmt.Sprint(n.Neighbors) + "}"
+}
+
 func main() {
 	UsersIdSession = make(map[int]int)
 	UsersNameId = make(map[string]int)
-	Sessions = make(map[int][]Node)
+	Sessions = make(map[int]SessionData)
 
 	CurrentNumOfSession = 2
-	InitialData := ParseData()
+	file, err := os.Open("data")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	initialData := ParseData(file)
 	for i := 1; i <= CurrentNumOfSession; i++ {
-		Sessions[i] = InitialData
+		Sessions[i] = initialData
 	}
 
 	http.HandleFunc("/SessionServer", LoginAndGetSession)
@@ -76,7 +94,10 @@ func UserExist(usrName string) bool {
 //var Sessions map[int][]Node    // Current running Sessions
 func ConnectToSession(w http.ResponseWriter, r *http.Request) {
 	usrName := r.FormValue("name")
-	usrSession, _ := strconv.Atoi(r.FormValue("session"))
+	usrSession, err := strconv.Atoi(r.FormValue("session"))
+	if err != nil {
+		log.Println(err)
+	}
 
 	/*
 		if newGame {
@@ -93,21 +114,46 @@ func ConnectToSession(w http.ResponseWriter, r *http.Request) {
 	usrID := UsersNameId[usrName]
 	UsersIdSession[usrID] = usrSession
 
-	jsonFormattedData, _ := json.Marshal(Sessions[usrSession])
+	jsonFormattedData, err := json.Marshal(Sessions[usrSession])
+	if err != nil {
+		log.Println(err)
+	}
 	fmt.Printf("%s\n", jsonFormattedData)
 	fmt.Fprintf(w, "%s", jsonFormattedData)
 }
 
-func ParseData() []Node {
+func ParseData(f *os.File) SessionData {
 	// HERE IS WHERE WE PUT INITIAL GRAPH STATE INTO SESSION
-	TempData := Node{
-		Data:      "cow",
-		Id:        1,
-		Neighbors: []int{},
+	graphData := make([]Node, 0, 50)
+	graphMapping := make(map[string]string)
+	newId := 1
+	scanner := bufio.NewScanner(f)
+	set := make(map[string]Node)
+	for scanner.Scan() {
+		nodeName := scanner.Text()
+		node, exists := set[nodeName]
+		if !exists {
+			node = Node{Data: nodeName, Id: newId}
+			graphMapping[strconv.Itoa(newId)] = nodeName
+			set[nodeName] = node
+			newId++
+		}
+		scanner.Scan()
+		strs := strings.Split(scanner.Text(), ",")
+		neighbors := make([]int, 8)
+		for _, edgeName := range strs {
+			edge, exists := set[edgeName]
+			if !exists {
+				edge = (Node{Data: edgeName, Id: newId})
+				graphMapping[strconv.Itoa(newId)] = edgeName
+				set[edgeName] = edge
+				newId++
+			}
+			neighbors = append(neighbors, edge.Id)
+		}
+		node.Neighbors = neighbors
+		graphData = append(graphData, node)
 	}
 
-	GraphData := make([]Node, 50)
-
-	GraphData = append(GraphData, TempData)
-	return GraphData
+	return SessionData{graphData, graphMapping}
 }
