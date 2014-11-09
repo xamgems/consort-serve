@@ -39,7 +39,7 @@ func GetUserSession(w http.ResponseWriter, r *http.Request) {
 	UsersIdSession[usrID] = usrSession
 	Sessions[usrSession] = true
 
-	SessionKeys := []int{}
+	SessionKeys := []int{10, 20, 50}
 	for k := range Sessions {
 		SessionKeys = append(SessionKeys, k)
 	}
