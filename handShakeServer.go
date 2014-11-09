@@ -164,13 +164,13 @@ func ParseData(f *os.File) SessionData {
 			break
 		}
 		if lineType == "node" {
-			visible := false
-			if newId == 1 {
-				visible = true
-			}
 			nodeName := strsToks[1]
 			x, _ := strconv.ParseFloat(strsToks[2], 64)
 			y, _ := strconv.ParseFloat(strsToks[3], 64)
+			visible := false
+			if strsToks[7] == "filled" {
+				visible = true
+			}
 			node := &(Node{Data: nodeName, Id: newId, Known: visible, X: x, Y: y})
 			graphMapping[strconv.Itoa(newId)] = nodeName
 			set[nodeName] = node
