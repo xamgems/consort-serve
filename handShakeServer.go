@@ -203,11 +203,12 @@ func UpdateGameState(w http.ResponseWriter, r *http.Request) {
 	for k, v := range UsersIdSession {
 		fmt.Printf("v is %d, usrSess is %d\n", v, usrSess)
 		if v == usrSess {
-			fmt.Printf("IM IN WITH USERREG = %s", UsersIdReg[k])
+			fmt.Printf("IM IN WITH USERREG = %s\n", UsersIdReg[k])
 			UsersReg = append(UsersReg, UsersIdReg[k])
 		}
 	}
 	fmt.Printf("%v\n", UsersReg)
+	fmt.Printf("broadcasting data%d\n")
 	//dataBodyGCM := &GCMData{dataName, UsersReg}
 	//jsonGCMData, err := json.Marshal(dataBodyGCM)
 	//fmt.Println(jsonGCMData)
