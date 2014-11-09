@@ -74,6 +74,7 @@ func main() {
 	http.HandleFunc("/SessionServer", LoginAndGetSession)
 	http.HandleFunc("/GameServer", ConnectToSession)
 	http.HandleFunc("/UpdateState", UpdateGameState)
+	fmt.Println("Server is ready")
 	http.ListenAndServe(":33333", nil)
 
 }
@@ -94,10 +95,6 @@ func LoginAndGetSession(w http.ResponseWriter, r *http.Request) {
 	for k := range Sessions {
 		SessionKeys = append(SessionKeys, k)
 	}
-
-	//var x = struct {
-	//	Sessions []int
-	//}{SessionKeys}
 
 	//fmt.Fprintf(w, "Connected successfully--\n user_name: %s\n user_id: %d\n user_session: %d", usrName, UsersNameId[usrName], UsersIdSession[UsersNameId[usrName]])
 
@@ -190,10 +187,6 @@ func ParseData(f *os.File) SessionData {
 }
 
 // TAKES NAME/GAMEDATA
-//type GCMData struct {
-//data             map[string]string
-//registration_ids []int
-//}
 func UpdateGameState(w http.ResponseWriter, r *http.Request) {
 	usrName := r.FormValue("user")
 	dataName := r.FormValue("data")
