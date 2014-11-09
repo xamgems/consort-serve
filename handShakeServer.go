@@ -214,7 +214,7 @@ func UpdateGameState(w http.ResponseWriter, r *http.Request) {
 	//fmt.Println("error:", err)
 	//}
 
-	data := map[string]interface{}{"name": dataName}
+	data := map[string]interface{}{"data": dataName}
 	msg := gcm.NewMessage(data, UsersReg...)
 	sender := &gcm.Sender{ApiKey: "AIzaSyCt7nNLPglsOiBoxCM5aSXbJw-93WkpMP4"}
 	_, err := sender.Send(msg, 2)
