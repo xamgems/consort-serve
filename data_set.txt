@@ -1,16 +1,16 @@
 graph {
-	"Darth Vader"[style=filled]
-	{"Luke Skywalker";"Princess Leia";"Boba Fett";"Yoda";"Palpatine";"Padme";"Ahsoka Tano"} -- "Darth Vader"
-	{"R2D2";"Han Solo";"Darth Maul";"Mace Windu"} -- "Luke Skywalker"
+	DarthVader[style=filled]
+	{LukeSkywalker;PrincessLeia;BobaFett;Yoda;Palpatine;Padme;AhsokaTano} -- DarthVader
+	{R2D2;HanSolo;DarthMaul;MaceWindu} -- LukeSkywalker
 	
-	"Bad MF"[style=filled]
-	{"Mace Windu";"Wallace";"Mia";"Vincent Vega";"Nick Fury"} -- "Bad MF"
-	{"Butch";"Jimmy"} -- "Vincent Vega"
+	BadMF[style=filled]
+	{MaceWindu;Wallace;Mia;VincentVega;NickFury} -- BadMF
+	{Butch;Jimmy} -- VincentVega
 
-	"John McClane"[style=filled]
-	{"Butch";"Holly";"Al Powell"} -- "John McClane"
+	JohnMcClane[style=filled]
+	{Butch;Holly;AlPowell} -- JohnMcClane
 
-	"Nick Fury"[style=filled]
-	{"Hulk";"Loki";"Hawkeye";"Ironman";"Black Widow";} -- "Nick Fury"
-	{"Thor";"Odin";} -- "Loki"
+	NickFury[style=filled]
+	{Hulk;Loki;Hawkeye;Ironman;BlackWidow;} -- NickFury
+	{Thor;Odin;} -- Loki
 }
