@@ -131,9 +131,12 @@ func ConnectToSession(w http.ResponseWriter, r *http.Request) {
 	if _, ok := Sessions[usrSession]; !ok {
 		fmt.Fprintf(w, "SESSION PASSED IN DOES NOT EXIST\n")
 	}
+
+	fmt.Println("Before Update: ", UsersIdSession)
 	usrID := UsersNameId[usrName]
 	UsersIdSession[usrID] = usrSession
 
+	fmt.Println("After Update: ", UsersIdSession)
 	jsonFormattedData, err := json.Marshal(Sessions[usrSession])
 	if err != nil {
 		log.Println(err)
@@ -198,10 +201,12 @@ func UpdateGameState(w http.ResponseWriter, r *http.Request) {
 	usrSess := UsersIdSession[usrId]
 	fmt.Println(usrName)
 	fmt.Println(dataName)
-
+	fmt.Println(UsersIdSession)
 	UsersReg := []string{}
 	for k, v := range UsersIdSession {
+		fmt.Printf("v is %d, usrSess is %d\n", v, usrSess)
 		if v == usrSess {
+			fmt.Printf("IM IN WITH USERREG = %s", UsersIdReg[k])
 			UsersReg = append(UsersReg, UsersIdReg[k])
 		}
 	}
