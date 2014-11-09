@@ -195,7 +195,7 @@ func UpdateGameState(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(usrName)
 	fmt.Println(dataName)
 	fmt.Println(UsersIdSession)
-	UsersReg := []string{"dasdaw21312ug3812bduhbob", "23g1y2udbhjsabdu2y3rbjk@!#^*!@$"}
+	UsersReg := []string{}
 	for k, v := range UsersIdSession {
 		fmt.Printf("v is %d, usrSess is %d\n", v, usrSess)
 		if v == usrSess {
