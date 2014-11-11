@@ -72,7 +72,7 @@ func main() {
 
 	CurrentGameState = 1
 	CurrentNumOfSession = 2
-	file, err := os.Open("friends.txt")
+	file, err := os.Open("data_set.plain")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
