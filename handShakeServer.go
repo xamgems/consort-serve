@@ -4,13 +4,14 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/alexjlockwood/gcm"
-	"github.com/mssola/user_agent"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/alexjlockwood/gcm"
+	"github.com/mssola/user_agent"
 )
 
 var UsersNameId map[string]int   // Mapping from UserName to Id
@@ -99,16 +100,18 @@ func LoginAndGetSession(w http.ResponseWriter, r *http.Request) {
 	ua := user_agent.New(r.UserAgent())
 	usrName := r.FormValue("user")
 	regID := "browser"
-	if ua.Mobile() {
-		regID = r.FormValue("regid")
-		UsersIdReg[UsersNameId[usrName]] = regID
-	}
+	// Commented this out for use
+	// if ua.Mobile() {
+	regID = r.FormValue("regid")
+	// }
 
+	fmt.Println("User: ", usrName, " RegId: ", regID)
 	if !UserExist(usrName) {
 		// User does not exist, Assign new id
-		UsersNameId[usrName] = CurrentNumOfId + 1
+		UsersNameId[usrName] = CurrentNumOfId
 		CurrentNumOfId++
 	}
+	UsersIdReg[UsersNameId[usrName]] = regID
 
 	SessionKeys := []int{}
 	for k := range Sessions {
@@ -125,7 +128,6 @@ func LoginAndGetSession(w http.ResponseWriter, r *http.Request) {
 	} else {
 		fmt.Printf("Browser user connected.\n")
 	}
-	fmt.Printf("sending user with string: %s\n", jsonFormatted)
 	fmt.Fprintf(w, "%s\n", jsonFormatted)
 }
 
@@ -140,16 +142,13 @@ func ConnectToSession(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "SESSION PASSED IN DOES NOT EXIST\n")
 	}
 
-	fmt.Println("User Id Session Map before Update: ", UsersIdSession)
 	usrID := UsersNameId[usrName]
 	UsersIdSession[usrID] = usrSession
 
-	fmt.Println("User Id Session Map after Update: ", UsersIdSession)
 	jsonFormattedData, err := json.Marshal(Sessions[usrSession])
 	if err != nil {
 		log.Println(err)
 	}
-	fmt.Printf(" Sending user with string: %s\n", jsonFormattedData)
 	fmt.Fprintf(w, "%s", jsonFormattedData)
 }
 
@@ -211,26 +210,26 @@ func UpdateGameState(w http.ResponseWriter, r *http.Request) {
 	CurrentGameState++
 	DataState[usrSess].State[CurrentGameState] = dataName
 
-	fmt.Printf("User: %s is requestin data\n", usrName)
-	fmt.Println("User sent data: ", dataName)
-	fmt.Printf("User requesting data from session: %d\n", usrSess)
-	fmt.Println(UsersIdSession)
+	fmt.Printf("User: %s is requesting data from session %d\n", usrName, usrSess)
+	fmt.Println("\tData:", dataName)
 	UsersReg := []string{}
-	for k, v := range UsersIdSession {
-		if v == usrSess {
-			UsersReg = append(UsersReg, UsersIdReg[k])
+	fmt.Println("UsersIdReg:", UsersIdReg)
+	for user, sessId := range UsersIdSession {
+		fmt.Println("SessId:", sessId, "user:", user)
+		if sessId == usrSess {
+			UsersReg = append(UsersReg, UsersIdReg[user])
 		}
 	}
-
+	fmt.Println("Gcm to RegIds:", UsersReg)
 	data := map[string]interface{}{"data": dataName}
 	msg := gcm.NewMessage(data, UsersReg...)
 	sender := &gcm.Sender{ApiKey: "AIzaSyCt7nNLPglsOiBoxCM5aSXbJw-93WkpMP4"}
-	_, err := sender.Send(msg, 2)
+	_, err := sender.Send(msg, 10)
 	if err != nil {
 		fmt.Println("Failed", err)
 		return
 	}
-
+	fmt.Println("Gcm Sent Message!")
 }
 
 // For browser
