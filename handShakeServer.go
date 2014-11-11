@@ -4,13 +4,13 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/alexjlockwood/gcm"
+	"github.com/mssola/user_agent"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
-
-	"github.com/alexjlockwood/gcm"
 )
 
 var UsersNameId map[string]int   // Mapping from UserName to Id
@@ -18,8 +18,15 @@ var UsersIdSession map[int]int   // Mapping from Id to Session
 var UsersIdReg map[int]string    // Mapping from Id to Rec_ID
 var Sessions map[int]SessionData // Current running Sessions
 
+var DataState map[int]StateMap // Mapping from GameState to Data
+
+var CurrentGameState int    // Keep track of current game state
 var CurrentNumOfId int      // to assign new id for new users
 var CurrentNumOfSession int // to assign new session
+
+type StateMap struct {
+	State map[int]string
+}
 
 type SessionData struct {
 	Graph    Graph
@@ -61,7 +68,9 @@ func main() {
 	UsersNameId = make(map[string]int)
 	Sessions = make(map[int]SessionData)
 	UsersIdReg = make(map[int]string)
+	DataState = make(map[int]StateMap)
 
+	CurrentGameState = 1
 	CurrentNumOfSession = 2
 	file, err := os.Open("friends.txt")
 	if err != nil {
@@ -70,11 +79,16 @@ func main() {
 	initialData := ParseData(file)
 	for i := 1; i <= CurrentNumOfSession; i++ {
 		Sessions[i] = initialData
+		dataState := StateMap{State: make(map[int]string)}
+		DataState[i] = dataState
 	}
 
 	http.HandleFunc("/SessionServer", LoginAndGetSession)
 	http.HandleFunc("/GameServer", ConnectToSession)
 	http.HandleFunc("/UpdateState", UpdateGameState)
+
+	// browser user call this function to ask for potential updates
+	http.HandleFunc("/RequestUpdate", BrowserRequest)
 	fmt.Println("Server is ready")
 	http.ListenAndServe(":33333", nil)
 
@@ -82,8 +96,13 @@ func main() {
 
 // GetUserSession expect parameter "user" and "session"
 func LoginAndGetSession(w http.ResponseWriter, r *http.Request) {
+	ua := user_agent.New(r.UserAgent())
 	usrName := r.FormValue("user")
-	regID := r.FormValue("regid")
+	regID := "browser"
+	if ua.Mobile() {
+		regID = r.FormValue("regid")
+		UsersIdReg[UsersNameId[usrName]] = regID
+	}
 
 	if !UserExist(usrName) {
 		// User does not exist, Assign new id
@@ -91,27 +110,25 @@ func LoginAndGetSession(w http.ResponseWriter, r *http.Request) {
 		CurrentNumOfId++
 	}
 
-	UsersIdReg[UsersNameId[usrName]] = regID
 	SessionKeys := []int{}
 	for k := range Sessions {
 		SessionKeys = append(SessionKeys, k)
 	}
 
-	//fmt.Fprintf(w, "Connected successfully--\n user_name: %s\n user_id: %d\n user_session: %d", usrName, UsersNameId[usrName], UsersIdSession[UsersNameId[usrName]])
-
 	jsonFormatted, err := json.Marshal(SessionKeys)
 	if err != nil {
 		fmt.Println("error:", err)
 	}
-	fmt.Printf("new user: %s connected", usrName)
-	fmt.Printf("new user connectin with reg of %s\n" + regID)
-	fmt.Printf("%s\n", jsonFormatted)
+	fmt.Printf("new user: %s connected\n", usrName)
+	if ua.Mobile() {
+		fmt.Printf("new user connectin with reg of %s\n" + regID)
+	} else {
+		fmt.Printf("Browser user connected.\n")
+	}
+	fmt.Printf("sending user with string: %s\n", jsonFormatted)
 	fmt.Fprintf(w, "%s\n", jsonFormatted)
 }
 
-//var UsersNameId map[string]int // Mapping from UserName to Id
-//var UsersIdSession map[int]int // Mapping from Id to Session
-//var Sessions map[int][]Node    // Current running Sessions
 func ConnectToSession(w http.ResponseWriter, r *http.Request) {
 	usrName := r.FormValue("user")
 	usrSession, err := strconv.Atoi(r.FormValue("session"))
@@ -119,33 +136,23 @@ func ConnectToSession(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 
-	/*
-		if newGame {
-			CurrentAvaiSession++
-			usrSession = CurrentAvaiSession
-		} else if _, ok := Sessions[usrSession]; !ok {
-			//Error. (new game not clicked, passed session does not exist
-		}
-	*/
-
 	if _, ok := Sessions[usrSession]; !ok {
 		fmt.Fprintf(w, "SESSION PASSED IN DOES NOT EXIST\n")
 	}
 
-	fmt.Println("Before Update: ", UsersIdSession)
+	fmt.Println("User Id Session Map before Update: ", UsersIdSession)
 	usrID := UsersNameId[usrName]
 	UsersIdSession[usrID] = usrSession
 
-	fmt.Println("After Update: ", UsersIdSession)
+	fmt.Println("User Id Session Map after Update: ", UsersIdSession)
 	jsonFormattedData, err := json.Marshal(Sessions[usrSession])
 	if err != nil {
 		log.Println(err)
 	}
-	fmt.Printf("%s\n", jsonFormattedData)
+	fmt.Printf(" Sending user with string: %s\n", jsonFormattedData)
 	fmt.Fprintf(w, "%s", jsonFormattedData)
 }
 
-//regID, _ := strconv.Atoi(r.FormValue("regid"))
 func ParseData(f *os.File) SessionData {
 	// HERE IS WHERE WE PUT INITIAL GRAPH STATE INTO SESSION
 	graphData := make([]*Node, 0, 50)
@@ -190,31 +197,30 @@ func ParseData(f *os.File) SessionData {
 	return SessionData{Graph{graphData}, graphWidth, graphHeight, graphMapping}
 }
 
-// TAKES NAME/GAMEDATA
+// Expects Form data name "user" and "data"
+// Receives the correct string and broadcast to the rest of the
+// players.
+// NOTE: THIS METHOD IS NOT COMPLETE. WE SHOULD UPDATE THE GAME STATE DATA
+//       IN THE "SESSION" MAPPING
 func UpdateGameState(w http.ResponseWriter, r *http.Request) {
 	usrName := r.FormValue("user")
 	dataName := r.FormValue("data")
 	usrId := UsersNameId[usrName]
 	usrSess := UsersIdSession[usrId]
-	fmt.Println(usrName)
-	fmt.Println(dataName)
+
+	CurrentGameState++
+	DataState[usrSess].State[CurrentGameState] = dataName
+
+	fmt.Printf("User: %s is requestin data\n", usrName)
+	fmt.Println("User sent data: ", dataName)
+	fmt.Printf("User requesting data from session: %d\n", usrSess)
 	fmt.Println(UsersIdSession)
 	UsersReg := []string{}
 	for k, v := range UsersIdSession {
-		fmt.Printf("v is %d, usrSess is %d\n", v, usrSess)
 		if v == usrSess {
-			fmt.Printf("IM IN WITH USERREG = %s", UsersIdReg[k])
 			UsersReg = append(UsersReg, UsersIdReg[k])
 		}
 	}
-	fmt.Printf("%v\n", UsersReg)
-	//dataBodyGCM := &GCMData{dataName, UsersReg}
-	//jsonGCMData, err := json.Marshal(dataBodyGCM)
-	//fmt.Println(jsonGCMData)
-
-	//if err != nil {
-	//fmt.Println("error:", err)
-	//}
 
 	data := map[string]interface{}{"data": dataName}
 	msg := gcm.NewMessage(data, UsersReg...)
@@ -225,16 +231,33 @@ func UpdateGameState(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Send it out
-	//gcm := &http.Client{}
-	//req, _ := http.NewRequest("POST", "https://android.googleapis.com/gcm/send", bytes.NewBuffer(jsonGCMData))
-	//req.Header.Set("Content-Type", "application/json")
-	//req.Header.Set("Authorization", "key=AIzaSyCt7nNLPglsOiBoxCM5aSXbJw-93WkpMP4")
+}
 
-	//resp, err := gcm.Do(req)
-	//if err != nil {
-	//panic(err)
-	//}
-	//defer resp.Body.Close()
+// For browser
+func BrowserRequest(w http.ResponseWriter, r *http.Request) {
+	usrName := r.FormValue("user")
+	usrGameState, err := strconv.Atoi(r.FormValue("gamestate"))
+	if err != nil {
+		log.Println(err)
+	}
+	usrId := UsersNameId[usrName]
+	usrSess := UsersIdSession[usrId]
+	fmt.Printf("User: %s is requestin data\n", usrName)
+	fmt.Printf("User requesting data from session: %d\n", usrSess)
+	dataStateMap := DataState[usrSess]
+	strToUpdate := []string{}
+
+	if CurrentGameState != usrGameState {
+		// User is out of date.
+		for i := usrGameState + 1; i < len(dataStateMap.State); i++ {
+			strToUpdate = append(strToUpdate, dataStateMap.State[i])
+		}
+	}
+	jsonFormatted, err := json.Marshal(strToUpdate)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	fmt.Printf("sending user with string: %s\n", jsonFormatted)
+	fmt.Fprintf(w, "%s\n", jsonFormatted)
 
 }
