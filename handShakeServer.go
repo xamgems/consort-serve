@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/alexjlockwood/gcm"
-	"github.com/mssola/user_agent"
+//	"github.com/mssola/user_agent"
 )
 
 var UsersNameId map[string]int   // Mapping from UserName to Id
@@ -97,11 +97,12 @@ func main() {
 
 // GetUserSession expect parameter "user" and "session"
 func LoginAndGetSession(w http.ResponseWriter, r *http.Request) {
-	ua := user_agent.New(r.UserAgent())
+	//ua := user_agent.New(r.UserAgent())
 	usrName := r.FormValue("user")
+	usrPlat := r.FormValue("platform")
 	regID := "browser"
 	// Commented this out for use
-	 if ua.Mobile() {
+	 if usrPlat != "browser" {
 		regID = r.FormValue("regid")
 	 }
 
@@ -123,12 +124,12 @@ func LoginAndGetSession(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("error:", err)
 	}
 	fmt.Printf("new user: %s connected\n", usrName)
-	if ua.Mobile() {
+	 if usrPlat != "browser" {
 		fmt.Printf("new user connectin with reg of %s\n" + regID)
 	} else {
 		fmt.Printf("Browser user connected.\n")
 	}
-	fmt.Fprintf(w, "%s\n", jsonFormatted)
+		fmt.Fprintf(w, "%s\n", jsonFormatted)
 }
 
 func ConnectToSession(w http.ResponseWriter, r *http.Request) {
