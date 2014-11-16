@@ -101,9 +101,9 @@ func LoginAndGetSession(w http.ResponseWriter, r *http.Request) {
 	usrName := r.FormValue("user")
 	regID := "browser"
 	// Commented this out for use
-	// if ua.Mobile() {
-	regID = r.FormValue("regid")
-	// }
+	 if ua.Mobile() {
+		regID = r.FormValue("regid")
+	 }
 
 	fmt.Println("User: ", usrName, " RegId: ", regID)
 	if !UserExist(usrName) {
