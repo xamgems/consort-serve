@@ -71,7 +71,7 @@ func main() {
 	UsersIdReg = make(map[int]string)
 	DataState = make(map[int]StateMap)
 
-	CurrentGameState = 1
+	CurrentGameState = 0
 	CurrentNumOfSession = 2
 	file, err := os.Open("data_set.plain")
 	if err != nil {
@@ -90,6 +90,7 @@ func main() {
 
 	// browser user call this function to ask for potential updates
 	http.HandleFunc("/RequestUpdate", BrowserRequest)
+	http.HandleFunc("/UpdateBrowserState", BrowserStateUpdate)
 	fmt.Println("Server is ready")
 	http.ListenAndServe(":33333", nil)
 
@@ -237,6 +238,7 @@ func UpdateGameState(w http.ResponseWriter, r *http.Request) {
 func BrowserRequest(w http.ResponseWriter, r *http.Request) {
 	usrName := r.FormValue("user")
 	usrGameState, err := strconv.Atoi(r.FormValue("gamestate"))
+	callback := r.FormValue("callback")
 	if err != nil {
 		log.Println(err)
 	}
@@ -249,8 +251,8 @@ func BrowserRequest(w http.ResponseWriter, r *http.Request) {
 
 	if CurrentGameState != usrGameState {
 		// User is out of date.
-		for i := usrGameState + 1; i < len(dataStateMap.State); i++ {
-			strToUpdate = append(strToUpdate, dataStateMap.State[i])
+		for i := usrGameState; i < len(dataStateMap.State); i++ {
+			strToUpdate = append(strToUpdate, dataStateMap.State[i + 1])
 		}
 	}
 	jsonFormatted, err := json.Marshal(strToUpdate)
@@ -258,6 +260,25 @@ func BrowserRequest(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("error:", err)
 	}
 	fmt.Printf("sending user with string: %s\n", jsonFormatted)
-	fmt.Fprintf(w, "%s\n", jsonFormatted)
+	fmt.Fprintf(w, "%s('%s')", callback, jsonFormatted)
 
+}
+
+// Receive data from browser session and update gamestate
+// SHould consider combining with UpdateGameState function
+func BrowserStateUpdate(w http.ResponseWriter, r *http.Request) {
+	usrName := r.FormValue("user")
+	usrData := r.FormValue("data")
+	usrGameState, err := strconv.Atoi(r.FormValue("gamestate"))
+	if err != nil {
+		log.Println(err)
+	}
+	usrId := UsersNameId[usrName]
+	usrSess := UsersIdSession[usrId]
+	fmt.Printf("User: %s submitted date: %s to update\n", usrName, usrData)
+	fmt.Printf("User updating data to session: %d\n", usrSess)
+
+	// MAKING A HUGE ASSUMPTION THAT THE USERS GAMESTATE IS UP TO DATA
+	DataState[usrSess].State[usrGameState] = usrData;
+	CurrentGameState++;
 }
